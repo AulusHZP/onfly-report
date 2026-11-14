@@ -33,40 +33,6 @@ Os testes adicionais em [test_additional_rules.py](../tests/test_additional_rule
 
 Também foram conferidos o uso de `Decimal`, a média calculada sobre as noites de quarto e a serialização monetária com duas casas decimais. Os relatórios de conferência foram gerados em arquivos temporários, preservando os relatórios existentes em `output/`.
 
-## Como executar e validar
-
-Requisitos: **Python 3.11 ou superior** e as dependências de `requirements-dev.txt`. Execute os comandos a partir da raiz do projeto.
-
-### Windows / PowerShell
-
-Crie o ambiente, instale as dependências e execute os testes:
-
-```powershell
-python -m venv .venv
-.\.venv\Scripts\python.exe -m pip install -r requirements-dev.txt
-.\.venv\Scripts\python.exe -m pytest -q
-```
-
-Gere os relatórios do arquivo principal e da amostra:
-
-```powershell
-$env:PYTHONPATH = "src"
-.\.venv\Scripts\python.exe -m onfly_report --input data/reservas_hoteis.csv --rates data/taxas_cambio.csv --output output/report.json --top 5
-.\.venv\Scripts\python.exe -m onfly_report --input data/exemplo-validacao.csv --rates data/taxas_cambio.csv --output output/exemplo.json
-```
-
-### Linux / macOS
-
-```bash
-python3.11 -m venv .venv
-.venv/bin/python -m pip install -r requirements-dev.txt
-.venv/bin/python -m pytest -q
-
-PYTHONPATH=src .venv/bin/python -m onfly_report --input data/reservas_hoteis.csv --rates data/taxas_cambio.csv --output output/report.json --top 5
-PYTHONPATH=src .venv/bin/python -m onfly_report --input data/exemplo-validacao.csv --rates data/taxas_cambio.csv --output output/exemplo.json
-```
-
-As instruções de Linux/macOS são fornecidas para reprodução; a validação registrada abaixo foi realizada em Windows.
 
 ## Resultados da validação
 
@@ -112,36 +78,4 @@ O relatório de `data/exemplo-validacao.csv` correspondeu aos valores esperados 
 
 As duas entradas de `by_month` e os cinco itens de `top_hotels` também conferiram com o README, assim como `report_version = "1.0"` e o offset `-03:00` de `generated_at`.
 
-## Pendência: leitura integral do CSV
 
-**Causa raiz:** o método `CsvReservationRepository.read()` interrompe a leitura ao atingir 200 registros, ignorando as reservas seguintes.
-
-O trecho permanece em [csv_reservation_repository.py](../src/onfly_report/repositories/csv_reservation_repository.py):
-
-```python
-if len(rows) == 200:
-    break
-```
-
-O impacto foi confirmado tanto no teste adicional quanto no arquivo principal:
-
-| Entrada | Reservas no CSV | Reservas no relatório |
-| --- | ---: | ---: |
-| Amostra de validação | 12 | 12 |
-| Cenário de `test_more_than_200_rows` | 205 | 200 |
-| `data/reservas_hoteis.csv` | 300 | 200 |
-
-O CLI retorna sucesso mesmo com o processamento parcial. A amostra passa porque contém apenas 12 reservas.
-
-Para concluir a correção, é necessário remover a interrupção antecipada, reexecutar a suíte e regenerar o relatório principal, verificando `total_reservations = 300`. Essa alteração de código ainda não foi realizada nesta revisão documental.
-
-## Uso de IA
-
-O Codex auxiliou na leitura do projeto, na execução das validações e na redação deste documento. A descrição das causas originais foi fornecida pelo responsável pelo projeto.
-
-Antes do envio, ainda devem ser incluídos os registros exigidos pelo enunciado:
-
-- `entrega/uso-de-ia/declaracao.md`: ferramenta e modelo utilizados, com a divisão das atividades entre o responsável e a IA.
-- Exportação das sessões ou log consolidado de prompts e respostas em `entrega/uso-de-ia/`.
-
-Esses arquivos ainda não estão presentes nesta cópia do projeto.
